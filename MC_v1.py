@@ -4,45 +4,53 @@ import matplotlib.pyplot as plt
 
 
 # Initialization
-mode = 4    # 1: all up, 2: all down, 3: random - spin configuration
+mode = 3    # 1: all up, 2: all down, 3: random - spin configuration, 4: half up half down
 kb = 1.0    # Boltzmann constant
 T = 1.0     # Temperature
 beta = 1/(kb*T)
 J = 1.0     # Interaction strength
 H = 0.0     # External magnetic field
-L = 50      # Lattice size
+L = 6       # Lattice size
 N = L * L   # Number of spins
 print("Particle number:", N)
 
 
+
+
 def init_spins(L, mode):
     if mode == 1:
-        return np.ones((L, L), dtype=int)
+        spins = np.ones((L, L), dtype=int)
     elif mode == 2:
-        return -np.ones((L, L), dtype=int)
+        spins = -np.ones((L, L), dtype=int)
     elif mode == 3:
-        return np.where(np.random.rand(L, L) < 0.5, 1, -1)
+        spins = np.where(np.random.rand(L, L) < 0.5, 1, -1)
     elif mode == 4:
         n = L * L
         half = n // 2
         spins_flat = np.array([1]*half + [-1]*(n - half), dtype=int)
         np.random.shuffle(spins_flat)
-        return spins_flat.reshape(L, L)
+        spins = spins_flat.reshape(L, L)
     else:
         raise ValueError("Please choose mode 1, 2, 3, or 4.")
-    
-    # surface periodic condition
-    for j in range(L):
-        m[L,j] = m[1,j]
-    for i in range(L):
-        m[i,L] = m[i,1]
+
+    # Thêm 1 hàng + 1 cột để áp dụng periodic boundary condition
+    m = np.zeros((L+1, L+1), dtype=int)
+    m[:L, :L] = spins
+
+    # Điều kiện biên tuần hoàn
+    m[L, :L] = m[0, :L]     # hàng cuối = hàng đầu
+    m[:L, L] = m[:L, 0]     # cột cuối = cột đầu
+    m[L, L]   = m[0, 0]     # góc cuối = góc đầu
+
+    return m
+
 
 def hamiltonian(spin_tot, J, H):
-    H = H1 = H2 = 0
+    H = H1 = H2 = 0.0
     # Calculate hamiltonian interaction between spins
     for i in range(L):
         for j in range(L):
-            H1 += -J * (spin_tot[i,j]*(spin_tot[i,(j-1)%L] + spin_tot[(i-1)%L,j] + spin_tot[i,(j+1)%L] + spin_tot[(i+1)%L,j]))
+            H1 += -J * (spin_tot[i,j]*(spin_tot[i,(j-1)] + spin_tot[(i-1),j] + spin_tot[i,(j+1)] + spin_tot[(i+1),j]))
     # Calculate hamiltonian interaction with magnetic field H
     for i in range(L):
         for j in range(L):
