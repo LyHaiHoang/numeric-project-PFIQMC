@@ -8,7 +8,7 @@ J = 1.0            # Constante d’interaction entre spins (échange)
 L = 50             # Taille du réseau (L x L)
 N = L * L          # Nombre total de spins
 n_steps = 20       # Nombre de valeurs de champ externe H (balayage)
-n_mcs   = 200       # Nombre d’itérations Monte Carlo par valeur de H
+n_mcs   = 100       # Nombre d’itérations Monte Carlo par valeur de H
 
 
 # === Initialisation des spins ===
@@ -76,7 +76,7 @@ plt.show()
 
 
 # === Boucle d’hystérésis (variation de H à T fixe) ===
-T = 2.5  # Température fixée pour la boucle
+T = 1.0  # Température fixée pour la boucle
 for H in H_vals:
     # On laisse évoluer le système vers l’équilibre
     for _ in range(n_mcs):

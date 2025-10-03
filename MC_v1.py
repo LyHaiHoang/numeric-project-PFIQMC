@@ -1,49 +1,28 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
 # This code is used to calculate the ferro-paramagnetics phase transiion of 2D Ising model by using the Monte Carlo method
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 # Initialization
-mode = 3    # 1: all up, 2: all down, 3: random - spin configuration, 4: half up half down
+mode = 1    # 1: all up, 2: all down, 3: random - spin configuration, 4: half up half down
 kb = 1.0    # Boltzmann constant
 T = 1.0     # Temperature
 beta = 1/(kb*T)
 J = 1.0     # Interaction strength
 H = 0.0     # External magnetic field
-L = 6       # Lattice size
+L = 5      # Lattice size
 N = L * L   # Number of spins
 print("Particle number:", N)
-
-
-
 
 def init_spins(L, mode):
     if mode == 1:
         spins = np.ones((L, L), dtype=int)
     elif mode == 2:
         spins = -np.ones((L, L), dtype=int)
-    elif mode == 3:
-        spins = np.where(np.random.rand(L, L) < 0.5, 1, -1)
-    elif mode == 4:
-        n = L * L
-        half = n // 2
-        spins_flat = np.array([1]*half + [-1]*(n - half), dtype=int)
-        np.random.shuffle(spins_flat)
-        spins = spins_flat.reshape(L, L)
-    else:
-        raise ValueError("Please choose mode 1, 2, 3, or 4.")
-
-    # Thêm 1 hàng + 1 cột để áp dụng periodic boundary condition
-    m = np.zeros((L+1, L+1), dtype=int)
-    m[:L, :L] = spins
-
-    # Điều kiện biên tuần hoàn
-    m[L, :L] = m[0, :L]     # hàng cuối = hàng đầu
-    m[:L, L] = m[:L, 0]     # cột cuối = cột đầu
-    m[L, L]   = m[0, 0]     # góc cuối = góc đầu
-
-    return m
-
+    return spins
 
 def hamiltonian(spin_tot, J, H):
     H = H1 = H2 = 0.0
@@ -69,35 +48,35 @@ def specific_heat(e2, e, T, N):
     Cv = (N**2)*(e2 - e**2)/(kb*T**2)
     return Cv
 
-def metropolis_sweep(spin_tot, beta, J):
-    for _ in range(N):
-        i = np.random.randint(0, L)
-        j = np.random.randint(0, L)
-        delta_E = 2 * J * spin_tot[i,j] * (spin_tot[i,(j-1)%L] + spin_tot[(i-1)%L,j] + spin_tot[i,(j+1)%L] + spin_tot[(i+1)%L,j])
-        if delta_E < 0 or np.random.rand() < np.exp(-beta * delta_E):
-            spin_tot[i,j] *= -1
-    return spin_tot
-
 def aimantation(spin_tot):
     m = np.sum(spin_tot) / N
     return m
 
-def plot_mT(L, J, H, T_min, T_max, nT, N):
-    T_min = 1.0
-    T_max = 4.0
-    nT = 20
-    Ts = np.linspace(T_min, T_max, nT)
-    mvals = []
-    lattice = init_spins(L,4)
+def metropolis_sweep(spin_tot, beta, J):
+    L = spin_tot.shape[0]
+    N = L*L
+    for _ in range(N):
+        i = np.random.randint(0, L)
+        j = np.random.randint(0, L)
+        s = spin_tot[i, j]
+        nb = (spin_tot[(i-1)%L, j] + spin_tot[(i+1)%L, j] +
+              spin_tot[i, (j-1)%L] + spin_tot[i, (j+1)%L])
+        delta_E = 2 * J * s * nb
+        if delta_E < 0 or np.random.rand() < np.exp(-beta*delta_E):
+            spin_tot[i, j] = -s
+    return spin_tot
 
-    for T in Ts:
-                
-        acc = 0.0
-        for _ in range(N):
-            metropolis_sweep(lattice, beta, J)
-            acc = aimantation(lattice)
-        mvals.append(acc)
-    return Ts, np.array(mvals)
+
+def run_metropolis(L, T, mode, J, H, kb, nsteps=None):
+    beta = 1/(kb*T)
+    spin_tot = init_spins(L, mode)
+    if nsteps is None:
+        nsteps = L*L
+    m_vals = []
+    for _ in range(nsteps):
+        spin_tot = metropolis_sweep(spin_tot, beta, J)
+        m_vals.append(aimantation(spin_tot))
+    return np.arange(nsteps), np.array(m_vals)
 
 if __name__ == "__main__":
 
@@ -134,13 +113,22 @@ if __name__ == "__main__":
     Tc = 2*J / (np.log(1 + np.sqrt(2)))
     print("Critical temperature:", Tc)
 
-    #2.0 Monte Carlo simulation
+    # 2.0 Monte Carlo simulation
     
-    Ts, mvals = plot_mT(L, J, H, T_min=1.0, T_max=4.0, nT=20, N=N)
-    Tc = 2.0 / np.log(1+np.sqrt(2))
-    plt.plot(Ts, mvals, 'o-', label='|m| (Metropolis)')
-    plt.axvline(Tc, color='r', ls='--', label=f'Tc~{Tc:.3f}')
-    plt.xlabel('T')
-    plt.ylabel('magnetization per spin |m|')
+    temperatures = np.linspace(1.0, 4.0, 20)
+    m_vals = []
+
+    for T in temperatures:
+        steps, m = run_metropolis(L, T, mode, J, H, kb, nsteps=2000)  # chạy mỗi T
+        m_vals.append(np.mean(np.abs(m[int(len(m)/2):])))  # bỏ nửa đầu (quá trình thermalization)
+
+    plt.plot(temperatures, m_vals, 'o-')
+    # plt.axvline(Tc, color='r', linestyle='--', label=f'Tc ~ {Tc:.3f}')
+    plt.xlabel('Temperature T') 
+    plt.ylabel('Magnetization |m|')
     plt.legend()
     plt.show()
+
+    
+
+
