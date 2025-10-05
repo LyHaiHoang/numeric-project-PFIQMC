@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 kb = 1.0           # Constante de Boltzmann (fixée à 1 pour simplifier)
 T = 1.5            # Température initiale
 J = 1.0            # Constante d’interaction entre spins (échange)
-L = 50             # Taille du réseau (L x L)
+L = 100             # Taille du réseau (L x L)
 N = L * L          # Nombre total de spins
-H = 5.0
-n_mcs   = 10      # Nombre d’itérations Monte Carlo par valeur de H
+H = 0.0
+n_mcs   = 1000      # Nombre d’itérations Monte Carlo par valeur de H
 
 
 # === Initialisation des spins ===
@@ -44,7 +44,7 @@ def aimantation(spins, N):
     return np.sum(spins) / N 
 
 # === Balayage en température ===
-T_start, T_end, dT = 1.0, 4.0, 0.4   
+T_start, T_end, dT = 1.0, 4.0, 0.2   
 T_up   = np.arange(T_start, T_end + dT, dT)
 T_down = np.arange(T_end, T_start - dT, -dT)
 T_vals = np.concatenate([T_up, T_down])
