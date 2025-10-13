@@ -17,7 +17,7 @@ for filename in filenames:
     data = np.loadtxt(filename)
     H_vals = data[:, 0]   # cột 1 = H
     mH_vals = data[:, 1]  # cột 2 = m
-    plt.plot(H_vals, mH_vals, "-", ms=4, label=filename.split("/")[-1])
+    plt.plot(H_vals, mH_vals, "-s", ms=4, label=filename.split("/")[-1])
 
 plt.xlabel("Champ magnétique H")
 plt.ylabel("Aimantation par spin")
