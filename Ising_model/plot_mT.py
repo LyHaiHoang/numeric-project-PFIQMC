@@ -17,7 +17,7 @@ for filename in filenames:
     data = np.loadtxt(filename)
     T_vals = data[:, 0]   # cột 1 = T
     mT_vals = data[:, 1]  # cột 2 = m
-    plt.plot(T_vals, mT_vals, "-s",color="blue", ms=4, label="L=100")#label=filename.split("/")[-1])
+    plt.plot(T_vals, mT_vals, "-",color="blue", ms=4, label="L=100")#label=filename.split("/")[-1])
 
 plt.xlabel("Température T")
 plt.ylabel("Aimantation par spin")

@@ -9,7 +9,7 @@ J = 1.0            # Constante d’interaction entre spins (échange)
 L = 50             # Taille du réseau (L x L)
 N = L * L          # Nombre total de spins
 H = 0.0
-n_mcs   = 100     # Nombre d’itérations Monte Carlo par valeur de H
+n_mcs   = 500     # Nombre d’itérations Monte Carlo par valeur de H
 
 
 # === Initialisation des spins ===
@@ -45,7 +45,7 @@ def aimantation(spins, N):
     return np.sum(spins) / N 
 
 # === Balayage en température ===
-T_start, T_end, dT = 1.0, 4.0, 0.1   
+T_start, T_end, dT = 1.0, 4.0, 0.02   
 T_up   = np.arange(T_start, T_end + dT, dT)
 T_down = np.arange(T_end, T_start - dT, -dT)
 T_vals = np.concatenate([T_up, T_down])
